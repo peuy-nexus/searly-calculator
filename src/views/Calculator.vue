@@ -1,150 +1,140 @@
 <template>
-    <div class="calculator">
-      <span class="calBar" style="grid-area: change"></span>
-      <span class="calBar" style="grid-area: minimize"></span>
-      <span class="calBar" style="grid-area: maximize"></span>
-      <span class="calBar" style="grid-area: close"></span>
+  <div class="calculator">
+    <span class="calBar" style="grid-area: change"></span>
+    <span class="calBar" style="grid-area: minimize"></span>
+    <span class="calBar" style="grid-area: maximize"></span>
+    <span class="calBar" style="grid-area: close"></span>
 
-      <div class="result" style="grid-area: result">
-        {{ equation }}
-      </div>
-        <!--
-          根号
-          平方
-          清空 y
-          删除一个字符
-          左右括号
-          转负 y
-          加减乘除 y
-          小数 y
-          等于 y
-        -->
-      <button class="calculatorTool" style="grid-area: prescribing">√</button>
-      <button class="calculatorTool" style="grid-area: square" >x²</button>
-      <button class="calculatorTool" style="grid-area: clear" @click="clear">C</button>
-      <button class="calculatorTool" style="grid-area: delete" ></button>
-      <button class="calculatorTool" style="grid-area: left">﹙</button>
-      <button class="calculatorTool" style="grid-area: right">﹚</button>
-      <button class="calculatorTool" style="grid-area: plus-minus" @click="calculateToggle">±</button>
-      <button class="calculatorTool" style="grid-area: add" @click="append('+')">+</button>
-      <button class="calculatorTool" style="grid-area: subtract" @click="append('-')">-</button>
-      <button class="calculatorTool" style="grid-area: multiply" @click="append('×')">×</button>
-      <button class="calculatorTool" style="grid-area: divide" @click="append('÷')">÷</button>
-      <button class="calculatorTool" style="grid-area: equal" @click="calculate">=</button>
+    <div class="result" style="grid-area: result">
+      {{ equation }}
+    </div>
 
-      <button v-for="(item,index) in number" :style="item" @click="append(index)" :key="index">{{index}}</button>
-   
+    <button class="calculatorTool" style="grid-area: prescribing" @click="prescribing">√</button>
+    <button class="calculatorTool" style="grid-area: square" @click="square">x²</button>
+    <button class="calculatorTool" style="grid-area: clear" @click="clear">C</button>
+    <button class="calculatorTool" style="grid-area: delete" @click="del"></button>
+    <button class="calculatorTool" style="grid-area: left" @click="append('(')">（</button>
+    <button class="calculatorTool" style="grid-area: right" @click="append(')')">）</button>
+    <button class="calculatorTool" style="grid-area: plus-minus" @click="calculateToggle">±</button>
+    <button class="calculatorTool" style="grid-area: add" @click="append('+')">+</button>
+    <button class="calculatorTool" style="grid-area: subtract" @click="append('-')">-</button>
+    <button class="calculatorTool" style="grid-area: multiply" @click="append('×')">×</button>
+    <button class="calculatorTool" style="grid-area: divide" @click="append('÷')">÷</button>
+    <button class="calculatorTool" style="grid-area: equal" @click="calculate">=</button>
 
-       <!-- 
-       <button style="grid-area: number-0" @click="append(0)">0</button>
-       <button style="grid-area: number-1" @click="append(1)">1</button>
-       <button style="grid-area: number-2" @click="append(2)">2</button>
-       <button style="grid-area: number-3" @click="append(3)">3</button>
-       <button style="grid-area: number-4" @click="append(4)">4</button>
-       <button style="grid-area: number-5" @click="append(5)">5</button>
-       <button style="grid-area: number-6" @click="append(6)">6</button>
-       <button style="grid-area: number-7" @click="append(7)">7</button>
-       <button style="grid-area: number-8" @click="append(8)">8</button>
-       <button style="grid-area: number-9" @click="append(9)">9</button>
-       -->
+    <button v-for="(item,index) in number" :style="item" @click="append(index)" :key="index">{{index}}</button>
 
-        <button style="grid-area: dot" @click="append('.')">.</button>
-      </div>
+    <button style="grid-area: dot" @click="append('.')">.</button>
+  </div>
 
 
 </template>
 
 <script>
   export default {
-      name: 'Calculator',
-      data(){
-        return{
+    name: 'Calculator',
+    data(){
+      return{
         equation: '0',  // 最终答案
-        isDecimalAdded: false, // 判断是否是小数和是否出现了两位小数点
-        isOperatorAdded: false, // 判断是否是功能键和是否出现两次功能键
+        dec: false, // 判断是否是小数和是否出现了两位小数点
+        poer: false, // 判断是否是功能键和是否出现两次功能键
         isStarted: false, // 是否已经开始输入数字
         number:['grid-area: number-0','grid-area: number-1','grid-area: number-2','grid-area: number-3','grid-area: number-4','grid-area: number-5','grid-area: number-6'
-        ,'grid-area: number-7','grid-area: number-8','grid-area: number-9'
+          ,'grid-area: number-7','grid-area: number-8','grid-area: number-9'
         ],
+      }
+    },
+    methods: {
+      // 检测字符为+ - × ÷
+      isOperator(character) {
+        return ['+', '-', '×', '÷'].indexOf(character) > -1
+      },
+      // 点击功能键
+      append(character) {
+        // 等于0并没有功能键时
+        if (this.equation === '0' && !this.isOperator(character)) {
+          if (character === '.') {
+            // 如果输入小数点则保留0
+            this.equation += '' + character
+            this.dec = true
+          } else {
+            // 如果不是，则将0替换为数字
+            this.equation = '' + character
+          }
+          this.isStarted = true
+          return
+        }
+
+        // 输入数字
+        if (!this.isOperator(character)) {
+          if (character === '.' && this.dec) {
+            return
+          }
+
+          if (character === '.') {
+            this.dec = true //防止输入两次小小数点
+            this.poer = true // 同时不能输入功能键
+          } else {
+            this.poer = false
+          }
+
+          this.equation += '' + character
+        }
+
+        // 输入功能键后
+        if (this.isOperator(character) && !this.poer) {
+          this.equation += '' + character
+          this.dec = false // 允许再次输入小数点
+          this.poer = true // 不能输入功能键
         }
       },
-      methods: {
-        // 检测字符为+ - × ÷
-        isOperator(character) {
-          return ['+', '-', '×', '÷'].indexOf(character) > -1
-        },
-        // 点击功能键
-        append(character) {
-          // 等于0并没有功能键时
-          if (this.equation === '0' && !this.isOperator(character)) {
-            if (character === '.') {
-              // 如果输入小数点则保留0
-              this.equation += '' + character
-              this.isDecimalAdded = true
-            } else {
-              // 如果不是，则将0替换为数字
-              this.equation = '' + character
-            }
-            this.isStarted = true
-            return
-          }
-
-          // 输入数字
-          if (!this.isOperator(character)) {
-            if (character === '.' && this.isDecimalAdded) {
-              return
-            }
-
-            if (character === '.') {
-              this.isDecimalAdded = true //防止输入两次小小数点
-              this.isOperatorAdded = true // 同时不能输入功能键
-            } else {
-              this.isOperatorAdded = false
-            }
-
-            this.equation += '' + character
-          }
-
-          // 输入功能键后
-          if (this.isOperator(character) && !this.isOperatorAdded) {
-            this.equation += '' + character
-            this.isDecimalAdded = false // 允许再次输入小数点
-            this.isOperatorAdded = true // 不能输入功能键
-          }
-        },
-        // =
-        calculate() {
-          let result = this.equation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
-          this.equation = parseFloat(eval(result).toFixed(9)).toString()
-          this.isDecimalAdded = false
-          this.isOperatorAdded = false
-        },
-        // +/-
-        calculateToggle() {
-          if (this.isOperatorAdded || !this.isStarted) {
-            return
-          }
-          this.equation = this.equation + '* -1'
-          this.calculate()
-        },
-        // %
-        // calculatePercentage() {
-        //   if (this.isOperatorAdded || !this.isStarted) {
-        //     return
-        //   }
-        //
-        //   this.equation = this.equation + '* 0.01'
-        //   this.calculate()
-        // },
-
-        // 清空
-        clear() {
-          this.equation = '0'
-          this.isDecimalAdded = false
-          this.isOperatorAdded = false
-          this.isStarted = false
+      del(){
+        this.equation = this.equation.substring(0,this.equation.length - 1);
+      },
+      // = 将乘除通过全局正则转化为数字并通过隐式转化为数值
+      calculate() {
+        function noEval(str) {
+          const Fn = Function;  //一个变量指向Function，防止有些前端编译工具报错
+          return new Fn('return ' + str)();
         }
+        let result = this.equation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
+        .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
+        this.equation = parseFloat(noEval(result).toFixed(9)).toString()
+        this.dec = false
+        this.poer = false
+      },
+      // +/-
+      calculateToggle() {
+        if (this.poer || !this.isStarted) {
+          return
+        }
+        this.equation = this.equation + '* -1'
+        this.calculate()
+      },
+      // 开根
+      prescribing(){
+        if (this.poer || !this.isStarted) {
+          return
+        }
+        this.calculate()
+        this.equation = Math.sqrt(this.equation).toFixed(9)
+      },
+      // 平方
+      square(){
+        if (this.poer || !this.isStarted) {
+          return
+        }
+        this.calculate()
+        this.equation = Math.pow(this.equation,2)
+      },
+      // 清空
+      clear() {
+        this.equation = '0'
+        this.dec = false
+        this.poer = false
+        this.isStarted = false
       }
+    }
   };
 </script>
 
@@ -240,7 +230,7 @@
   .result {
     text-align: right;
     line-height: var(--button-height);
-    font-size: 48px;
+    font-size: 45px;
     padding: 0 20px;
     color: #666;
     background-color: #fff;
