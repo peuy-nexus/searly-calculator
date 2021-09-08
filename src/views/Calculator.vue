@@ -12,7 +12,7 @@
     <button class="calculatorTool" style="grid-area: prescribing" @click="prescribing">√</button>
     <button class="calculatorTool" style="grid-area: square" @click="square">x²</button>
     <button class="calculatorTool" style="grid-area: clear" @click="clear">C</button>
-    <button class="calculatorTool" style="grid-area: delete" @click="del"></button>
+    <button class="calculatorTool" style="grid-area: delete" @click="del"></button>
     <button class="calculatorTool" style="grid-area: left" @click="append('(')">（</button>
     <button class="calculatorTool" style="grid-area: right" @click="append(')')">）</button>
     <button class="calculatorTool" style="grid-area: plus-minus" @click="calculateToggle">±</button>
@@ -35,6 +35,7 @@
     name: 'Calculator',
     data(){
       return{
+        maxNumber: 99999999999, // 最大数值
         equation: '0',  // 最终答案
         dec: false, // 判断是否是小数和是否出现了两位小数点
         poer: false, // 判断是否是功能键和是否出现两次功能键
@@ -57,7 +58,7 @@
             // 如果输入小数点则保留0
             this.equation += '' + character
             this.dec = true
-          } else {
+          }else{
             // 如果不是，则将0替换为数字
             this.equation = '' + character
           }
@@ -66,6 +67,11 @@
         }
 
         // 输入数字
+        // 溢出重置
+        this.changeColor('rgb(235, 234, 240)')
+        if( this.equation === '溢出'){
+          this.clear()
+        }
         if (!this.isOperator(character)) {
           if (character === '.' && this.dec) {
             return
@@ -88,18 +94,22 @@
           this.poer = true // 不能输入功能键
         }
       },
+      // 删除
       del(){
         this.equation = this.equation.substring(0,this.equation.length - 1);
       },
+      // 字符串转对象（对象会因为隐式转化变为数值型）
+      noEval(str){
+        const Fn = Function;  //一个变量指向Function，防止部分编译工具报错
+        return new Fn('return ' + str)();
+      },
       // = 将乘除通过全局正则转化为数字并通过隐式转化为数值
       calculate() {
-        function noEval(str) {
-          const Fn = Function;  //一个变量指向Function，防止有些前端编译工具报错
-          return new Fn('return ' + str)();
-        }
         let result = this.equation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
         .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
-        this.equation = parseFloat(noEval(result).toFixed(9)).toString()
+        // console.log(this.noEval(result))
+        this.equation = parseFloat(this.noEval(result).toFixed(12)).toString()
+        // console.log(this.equation)
         this.dec = false
         this.poer = false
       },
@@ -111,21 +121,35 @@
         this.equation = this.equation + '* -1'
         this.calculate()
       },
-      // 开根
+      // 开根 直接得出结果
       prescribing(){
         if (this.poer || !this.isStarted) {
           return
         }
         this.calculate()
-        this.equation = Math.sqrt(this.equation).toFixed(9)
+        this.equation = parseFloat(Math.sqrt(this.equation).toFixed(12)).toString()
       },
-      // 平方
-      square(){
-        if (this.poer || !this.isStarted) {
-          return
+      // 溢出部分按钮变色
+      changeColor(color){
+        let calculatorTool = document.querySelectorAll('.calculatorTool')
+        for (let i=0; i<calculatorTool.length; i++){
+          calculatorTool[i].style.background =color;
         }
+      },
+      // 平方 直接得出结果
+      square(){
         this.calculate()
-        this.equation = Math.pow(this.equation,2)
+
+          if (parseInt(this.equation) < this.maxNumber){
+            this.equation = parseFloat(Math.pow(this.equation,2).toFixed(12)).toString()
+          }else{
+            this.equation = '溢出'
+            this.dec = true
+            this.isStarted = true
+            this.changeColor('rgb(210, 210, 210)')
+          }
+
+        return
       },
       // 清空
       clear() {
@@ -133,6 +157,7 @@
         this.dec = false
         this.poer = false
         this.isStarted = false
+        this.changeColor('rgb(235, 234, 240)')
       }
     }
   };
@@ -166,7 +191,7 @@
     transform: translate(-50%,-50%);
     --button-width: 75px;
     --button-height: 60px;
-
+    /*overflow: hidden;*/
     display: grid;
     grid-template-areas:"change minimize maximize close"
     "result result result result"
@@ -183,10 +208,6 @@
 
   .calculator .calBar{
     line-height: var(--button-height);
-  }
-
-  .calculator .calBar:hover{
-    background-color: rgb(235, 234, 240);
   }
 
   .calculator span,
@@ -230,13 +251,13 @@
   .result {
     text-align: right;
     line-height: var(--button-height);
-    font-size: 45px;
+    font-size: 24px;
     padding: 0 20px;
     color: #666;
     background-color: #fff;
   }
 
-  .headBar{
+  .calBar{
     cursor: default;
   }
 </style>
