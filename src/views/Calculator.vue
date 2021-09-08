@@ -57,8 +57,12 @@
           if (character === '.') {
             // 如果输入小数点则保留0
             this.equation += '' + character
-            this.dec = true
-          }else{
+            this.dec = true //不能输入小数点
+          }else if(character === '）'){
+            this.equation += '' + character
+            this.poer = true // 不能输入功能键
+          }
+          else{
             // 如果不是，则将0替换为数字
             this.equation = '' + character
           }
@@ -70,7 +74,8 @@
         // 溢出重置
         this.changeColor('rgb(235, 234, 240)')
         if( this.equation === '溢出'){
-          this.clear()
+          this.handle()
+          this.changeColor('rgb(235, 234, 240)')
         }
         if (!this.isOperator(character)) {
           if (character === '.' && this.dec) {
@@ -96,6 +101,8 @@
       },
       // 删除
       del(){
+        this.handle()
+        this.changeColor('rgb(235, 234, 240)')
         this.equation = this.equation.substring(0,this.equation.length - 1);
       },
       // 字符串转对象（对象会因为隐式转化变为数值型）
@@ -118,6 +125,8 @@
         if (this.poer || !this.isStarted) {
           return
         }
+        this.handle()
+        this.changeColor('rgb(235, 234, 240)')
         this.equation = this.equation + '* -1'
         this.calculate()
       },
@@ -134,6 +143,11 @@
         let calculatorTool = document.querySelectorAll('.calculatorTool')
         for (let i=0; i<calculatorTool.length; i++){
           calculatorTool[i].style.background =color;
+        }
+      },
+      handle(){
+        if( this.equation === '溢出'){
+          this.equation = '0'
         }
       },
       // 平方 直接得出结果
