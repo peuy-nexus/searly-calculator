@@ -103,13 +103,14 @@
 
           this.equation += '' + character
           let prestore = new Array()
+
           // 22222222 需要修改
           if (!this.isOperator(character)){
-            prestore.unshift(character)
-            console.log(prestore);
+            this.calculate()
+            prestore.push(character)
+            console.log(prestore)
+            this.preEquation = prestore.toString()
           }
-          this.preEquation = prestore.toString()
-
         }
 
         // 输入功能键后
