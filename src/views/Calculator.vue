@@ -1,30 +1,31 @@
 <template>
   <div class="calculator">
-    <span class="calBar" style="grid-area: change"></span>
-    <span class="calBar" style="grid-area: minimize"></span>
-    <span class="calBar" style="grid-area: maximize"></span>
-    <span class="calBar" style="grid-area: close"></span>
-
-    <div class="result" style="grid-area: result">
+    <span class="calculator__calBar" style="grid-area: calculator__change"></span>
+    <span class="calculator__calBar" style="grid-area: calculator__minimize"></span>
+    <span class="calculator__calBar" style="grid-area: calculator__maximize"></span>
+    <span class="calculator__calBar" style="grid-area: calculator__close"></span>
+    <div class="calculator__result" style="grid-area: calculator__result">
       {{ equation }}
     </div>
-
-    <button class="calculatorTool" style="grid-area: prescribing" @click="prescribing">√</button>
-    <button class="calculatorTool" style="grid-area: square" @click="square">x²</button>
-    <button class="calculatorTool" style="grid-area: clear" @click="clear">C</button>
-    <button class="calculatorTool" style="grid-area: delete" @click="del"></button>
-    <button class="calculatorTool" style="grid-area: left" @click="append('(')">（</button>
-    <button class="calculatorTool" style="grid-area: right" @click="append(')')">）</button>
-    <button class="calculatorTool" style="grid-area: plus-minus" @click="calculateToggle">±</button>
-    <button class="calculatorTool" style="grid-area: add" @click="append('+')">+</button>
-    <button class="calculatorTool" style="grid-area: subtract" @click="append('-')">-</button>
-    <button class="calculatorTool" style="grid-area: multiply" @click="append('×')">×</button>
-    <button class="calculatorTool" style="grid-area: divide" @click="append('÷')">÷</button>
-    <button class="calculatorTool" style="grid-area: equal" @click="calculate">=</button>
+    <div class="calculator__preview" style="grid-area: calculator__preview">
+      {{preEquation}}
+    </div>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__prescribing" @click="prescribing">√</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__square" @click="square">x²</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__clear" @click="clear">C</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__delete" @click="del"></button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__left" @click="append('(')">（</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__right" @click="append(')')">）</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__plus-minus" @click="calculateToggle">±</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__add" @click="append('+')">+</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__subtract" @click="append('-')">-</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__multiply" @click="append('×')">×</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__divide" @click="append('÷')">÷</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__equal" @click="calculate">=</button>
 
     <button v-for="(item,index) in number" :style="item" @click="append(index)" :key="index">{{index}}</button>
 
-    <button style="grid-area: dot" @click="append('.')">.</button>
+    <button style="grid-area: calculator__dot" @click="append('.')">.</button>
   </div>
 
 
@@ -35,13 +36,17 @@
     name: 'Calculator',
     data(){
       return{
-        maxNumber: 99999999999, // 最大数值
+        // test:true, // 测试
+        maxNumber: 99999999999999, // 最大数值
         equation: '0',  // 最终答案
-        dec: false, // 判断是否是小数和是否出现了两位小数点
-        poer: false, // 判断是否是功能键和是否出现两次功能键
+        preEquation:'0', // 预览
+        dec: false, // 判断是否出现了两位小数点
+        poer: false, // 判断是否出现两次功能键
+        // right:false, // 判断是否出现了）
         isStarted: false, // 是否已经开始输入数字
-        number:['grid-area: number-0','grid-area: number-1','grid-area: number-2','grid-area: number-3','grid-area: number-4','grid-area: number-5','grid-area: number-6'
-          ,'grid-area: number-7','grid-area: number-8','grid-area: number-9'
+        number:['grid-area: calculator__number-0','grid-area: calculator__number-1','grid-area: calculator__number-2','grid-area: calculator__number-3',
+          'grid-area: calculator__number-4','grid-area: calculator__number-5','grid-area: calculator__number-6'
+          ,'grid-area: calculator__number-7','grid-area: calculator__number-8','grid-area: calculator__number-9'
         ],
       }
     },
@@ -57,14 +62,18 @@
           if (character === '.') {
             // 如果输入小数点则保留0
             this.equation += '' + character
+            // 11111111
+            this.preEquation = '0' + character
             this.dec = true //不能输入小数点
-          }else if(character === '）'){
-            this.equation += '' + character
-            this.poer = true // 不能输入功能键
           }
           else{
             // 如果不是，则将0替换为数字
             this.equation = '' + character
+            // 11111111 暂时未发现错误
+            if (!this.isOperator(character)){
+              this.preEquation = '' + character
+            }
+
           }
           this.isStarted = true
           return
@@ -77,11 +86,14 @@
           this.handle()
           this.changeColor('rgb(235, 234, 240)')
         }
+        // 防止输入两次小数
         if (!this.isOperator(character)) {
           if (character === '.' && this.dec) {
             return
           }
-
+          if (character === ')' && this.dec) {
+            return
+          }
           if (character === '.') {
             this.dec = true //防止输入两次小小数点
             this.poer = true // 同时不能输入功能键
@@ -90,6 +102,14 @@
           }
 
           this.equation += '' + character
+          let prestore = new Array()
+          // 22222222 需要修改
+          if (!this.isOperator(character)){
+            prestore.unshift(character)
+            console.log(prestore);
+          }
+          this.preEquation = prestore.toString()
+
         }
 
         // 输入功能键后
@@ -99,11 +119,15 @@
           this.poer = true // 不能输入功能键
         }
       },
+
       // 删除
       del(){
         this.handle()
         this.changeColor('rgb(235, 234, 240)')
-        this.equation = this.equation.substring(0,this.equation.length - 1);
+        this.preEquation = this.preEquation.substring(0,this.preEquation.length - 1);
+        if (this.preEquation === ''){
+          this.preEquation = '0'
+        }
       },
       // 字符串转对象（对象会因为隐式转化变为数值型）
       noEval(str){
@@ -113,10 +137,12 @@
       // = 将乘除通过全局正则转化为数字并通过隐式转化为数值
       calculate() {
         let result = this.equation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
-        .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
+          .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
         // console.log(this.noEval(result))
-        this.equation = parseFloat(this.noEval(result).toFixed(12)).toString()
+        // this.equation = parseFloat(this.noEval(result).toFixed(12)).toString()
+        this.preEquation = parseFloat(this.noEval(result).toFixed(15)).toString()
         // console.log(this.equation)
+        // this.preEquation = this.equation
         this.dec = false
         this.poer = false
       },
@@ -132,15 +158,17 @@
       },
       // 开根 直接得出结果
       prescribing(){
-        if (this.poer || !this.isStarted) {
-          return
-        }
-        this.calculate()
-        this.equation = parseFloat(Math.sqrt(this.equation).toFixed(12)).toString()
+        let result = this.preEquation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
+          .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
+        this.preEquation = parseFloat(this.noEval(result).toFixed(12)).toString()
+        this.dec = false
+        this.poer = false
+        this.equation = '√(' + this.preEquation +')'
+        this.preEquation = parseFloat(Math.sqrt(this.preEquation).toFixed(15)).toString()
       },
       // 溢出部分按钮变色
       changeColor(color){
-        let calculatorTool = document.querySelectorAll('.calculatorTool')
+        let calculatorTool = document.querySelectorAll('.calculator__calculatorTool')
         for (let i=0; i<calculatorTool.length; i++){
           calculatorTool[i].style.background =color;
         }
@@ -152,22 +180,27 @@
       },
       // 平方 直接得出结果
       square(){
-        this.calculate()
-
-          if (parseInt(this.equation) < this.maxNumber){
-            this.equation = parseFloat(Math.pow(this.equation,2).toFixed(12)).toString()
-          }else{
-            this.equation = '溢出'
-            this.dec = true
-            this.isStarted = true
-            this.changeColor('rgb(210, 210, 210)')
-          }
+        let result = this.preEquation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
+          .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
+        this.preEquation = parseFloat(this.noEval(result).toFixed(15)).toString()
+        this.dec = false
+        this.poer = false
+        this.equation = 'sqr(' + this.preEquation +')'
+        if (parseInt(this.preEquation) < this.maxNumber){
+          this.preEquation = parseFloat(Math.pow(this.preEquation,2).toFixed(15)).toString()
+        }else{
+          this.preEquation = '溢出'
+          this.dec = true
+          this.isStarted = true
+          this.changeColor('rgb(210, 210, 210)')
+        }
 
         return
       },
       // 清空
       clear() {
         this.equation = '0'
+        this.preEquation = '0'
         this.dec = false
         this.poer = false
         this.isStarted = false
@@ -207,20 +240,21 @@
     --button-height: 60px;
     /*overflow: hidden;*/
     display: grid;
-    grid-template-areas:"change minimize maximize close"
-    "result result result result"
-    "prescribing square clear delete"
-    "left right plus-minus divide"
-    "number-7 number-8 number-9 multiply"
-    "number-4 number-5 number-6 subtract"
-    "number-1 number-2 number-3 add"
-    "number-0 number-0 dot equal";
+    grid-template-areas:"calculator__change calculator__minimize calculator__maximize calculator__close"
+    "calculator__result calculator__result calculator__result calculator__result"
+    "calculator__preview calculator__preview calculator__preview calculator__preview"
+    "calculator__prescribing calculator__square calculator__clear calculator__delete"
+    "calculator__left calculator__right calculator__plus-minus calculator__divide"
+    "calculator__number-7 calculator__number-8 calculator__number-9 calculator__multiply"
+    "calculator__number-4 calculator__number-5 calculator__number-6 calculator__subtract"
+    "calculator__number-1 calculator__number-2 calculator__number-3 calculator__add"
+    "calculator__number-0 calculator__number-0 calculator__dot calculator__equal";
     grid-template-columns: repeat(4, var(--button-width));
-    grid-template-rows: repeat(8, var(--button-height));
+    grid-template-rows: repeat(9, var(--button-height));
 
   }
 
-  .calculator .calBar{
+  .calculator .calculator__calBar{
     line-height: var(--button-height);
   }
 
@@ -254,24 +288,30 @@
     background-color: rgb(220, 233, 243);
   }
 
-  .calculator .calculatorTool{
+  .calculator .calculator__calculatorTool{
     background-color: rgb(235, 234, 240);
   }
 
-  .calculator .calculatorTool:active{
+  .calculator .calculator__calculatorTool:active{
     background-color: rgb(198, 208, 229);
   }
 
-  .result {
+  .calculator__result,
+  .calculator__preview{
     text-align: right;
     line-height: var(--button-height);
-    font-size: 24px;
     padding: 0 20px;
+    font-size: 16px;
     color: #666;
     background-color: #fff;
   }
 
-  .calBar{
+  .calculator__preview{
+    font-size: 24px;
+    color: #000;
+  }
+
+  .calculator__calBar{
     cursor: default;
   }
 </style>
