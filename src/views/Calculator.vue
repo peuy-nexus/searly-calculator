@@ -36,13 +36,13 @@
     name: 'Calculator',
     data(){
       return{
-        // test:true, // 测试
+        test:true, // 测试
         maxNumber: 99999999999999, // 最大数值
-        equation: '0',  // 最终答案
-        preEquation:'0', // 预览
+        equation: '0',  // 计算表达
+        preEquation:'0', // 预览和答案
         dec: false, // 判断是否出现了两位小数点
         poer: false, // 判断是否出现两次功能键
-        // right:false, // 判断是否出现了）
+        flag:false, // 标识 判断数字是否清空
         isStarted: false, // 是否已经开始输入数字
         number:['grid-area: calculator__number-0','grid-area: calculator__number-1','grid-area: calculator__number-2','grid-area: calculator__number-3',
           'grid-area: calculator__number-4','grid-area: calculator__number-5','grid-area: calculator__number-6'
@@ -57,23 +57,23 @@
       },
       // 点击功能键
       append(character) {
+        console.log('点击了功能键');
         // 等于0并没有功能键时
         if (this.equation === '0' && !this.isOperator(character)) {
           if (character === '.') {
             // 如果输入小数点则保留0
-            this.equation += '' + character
-            // 11111111
+            // 0909
             this.preEquation = '0' + character
+            this.equation = '0' + character // 0910
             this.dec = true //不能输入小数点
-          }
-          else{
+          }else{
             // 如果不是，则将0替换为数字
+            // 0910
             this.equation = '' + character
-            // 11111111 暂时未发现错误
+            // 0909
             if (!this.isOperator(character)){
               this.preEquation = '' + character
             }
-
           }
           this.isStarted = true
           return
@@ -82,7 +82,8 @@
         // 输入数字
         // 溢出重置
         this.changeColor('rgb(235, 234, 240)')
-        if( this.equation === '溢出'){
+        if( this.preEquation === '溢出'){
+          console.log('溢出重置');
           this.handle()
           this.changeColor('rgb(235, 234, 240)')
         }
@@ -101,71 +102,101 @@
             this.poer = false
           }
 
-          this.equation += '' + character
-          let prestore = new Array()
+          // 0909 输入数字(运算符后)
+          if (this.isOperator(character) && this.flag){
+            // console.log('0909输入了数字 flag = flase');
+            this.preEquation = ''
+            this.equation = ''
+            this.equation += '' + character
+            this.flag = false
+          }else{
+            // console.log('090902输入了数字');
+            this.equation += '' + character
+          }
 
-          // 22222222 需要修改
-          if (!this.isOperator(character)){
-            this.calculate()
-            prestore.push(character)
-            console.log(prestore)
-            this.preEquation = prestore.toString()
+          // 0910 正常输入数字
+          if (!this.isOperator(character) && this.flag){
+            // console.log('0910输入了数字');
+            // 提前进行计算并得到计算所得值 0910
+            this.preEquation = ''
+            this.preEquation += '' + character
+            this.flag = false
+          }else{
+            this.preEquation += '' + character
           }
         }
 
         // 输入功能键后
         if (this.isOperator(character) && !this.poer) {
+          // 输入符号立刻进行计算
+          // let result = this.equation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
+          //   .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
+          //   .replace(new RegExp('sqr','g'),'')
+          //   .replace(new RegExp('√','g'),'')
+          // this.preEquation = parseFloat(this.noEval(result).toFixed(15)).toString()
           this.equation += '' + character
+          console.log('输入了功能键');
           this.dec = false // 允许再次输入小数点
           this.poer = true // 不能输入功能键
+          this.flag = true
         }
       },
 
       // 删除
       del(){
+        console.log('点击了删除');
         this.handle()
         this.changeColor('rgb(235, 234, 240)')
-        this.preEquation = this.preEquation.substring(0,this.preEquation.length - 1);
+        if (this.flag == false){
+          this.equation = this.equation.substring(0,this.equation.length - 1);
+          this.preEquation = this.preEquation.substring(0,this.preEquation.length - 1);
+        }else{
+          this.equation = ''
+          this.flag = false
+        }
         if (this.preEquation === ''){
           this.preEquation = '0'
         }
       },
-      // 字符串转对象（对象会因为隐式转化变为数值型）
+      // 计算表达式的值
       noEval(str){
         const Fn = Function;  //一个变量指向Function，防止部分编译工具报错
         return new Fn('return ' + str)();
       },
       // = 将乘除通过全局正则转化为数字并通过隐式转化为数值
       calculate() {
+        console.log('结果 flag = true');
         let result = this.equation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
           .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
-        // console.log(this.noEval(result))
-        // this.equation = parseFloat(this.noEval(result).toFixed(12)).toString()
-        this.preEquation = parseFloat(this.noEval(result).toFixed(15)).toString()
-        // console.log(this.equation)
-        // this.preEquation = this.equation
+          .replace(new RegExp('sqr','g'),'')
+          .replace(new RegExp('√','g'),'')
+        this.equation = parseFloat(this.noEval(result).toFixed(15)).toString()
+        this.preEquation = this.equation
         this.dec = false
         this.poer = false
+        this.flag = true
       },
       // +/-
       calculateToggle() {
-        if (this.poer || !this.isStarted) {
+        // console.log('+/-');
+        if (this.poer) {
+          // 如果是符号终止
           return
         }
         this.handle()
         this.changeColor('rgb(235, 234, 240)')
         this.equation = this.equation + '* -1'
-        this.calculate()
       },
       // 开根 直接得出结果
       prescribing(){
+        console.log('开根');
         let result = this.preEquation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
           .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
         this.preEquation = parseFloat(this.noEval(result).toFixed(12)).toString()
         this.dec = false
         this.poer = false
-        this.equation = '√(' + this.preEquation +')'
         this.preEquation = parseFloat(Math.sqrt(this.preEquation).toFixed(15)).toString()
+        this.equation = '√' + this.preEquation
       },
       // 溢出部分按钮变色
       changeColor(color){
@@ -175,33 +206,41 @@
         }
       },
       handle(){
-        if( this.equation === '溢出'){
-          this.equation = '0'
+        if( this.preEquation === '溢出'){
+          this.equation = ''
+          this.preEquation = '0'
         }
       },
       // 平方 直接得出结果
       square(){
+        console.log('平方');
         let result = this.preEquation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
           .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
         this.preEquation = parseFloat(this.noEval(result).toFixed(15)).toString()
         this.dec = false
         this.poer = false
-        this.equation = 'sqr(' + this.preEquation +')'
         if (parseInt(this.preEquation) < this.maxNumber){
           this.preEquation = parseFloat(Math.pow(this.preEquation,2).toFixed(15)).toString()
+          this.equation = 'sqr ' + this.preEquation
         }else{
           this.preEquation = '溢出'
           this.dec = true
           this.isStarted = true
           this.changeColor('rgb(210, 210, 210)')
         }
-
         return
       },
       // 清空
       clear() {
-        this.equation = '0'
-        this.preEquation = '0'
+        console.log('清空');
+        if (this.flag){
+          this.equation = ''
+          this.preEquation = ''
+          this.flag = false
+        }else{
+          this.preEquation = ''
+          this.flag = true
+        }
         this.dec = false
         this.poer = false
         this.isStarted = false
@@ -218,6 +257,8 @@
     align-items: center;
     min-height: 100vh;
     background-color: #eee;
+    border: none;
+    outline: none;
   }
 
   @font-face {
@@ -239,7 +280,6 @@
     transform: translate(-50%,-50%);
     --button-width: 75px;
     --button-height: 60px;
-    /*overflow: hidden;*/
     display: grid;
     grid-template-areas:"calculator__change calculator__minimize calculator__maximize calculator__close"
     "calculator__result calculator__result calculator__result calculator__result"
@@ -251,7 +291,7 @@
     "calculator__number-1 calculator__number-2 calculator__number-3 calculator__add"
     "calculator__number-0 calculator__number-0 calculator__dot calculator__equal";
     grid-template-columns: repeat(4, var(--button-width));
-    grid-template-rows: repeat(9, var(--button-height));
+    grid-template-rows:40px 40px repeat(9, var(--button-height));
 
   }
 
@@ -285,7 +325,7 @@
     background-color: #fff;
   }
 
-  .calculator button:active {
+  .calculator button:hover {
     background-color: rgb(220, 233, 243);
   }
 
@@ -293,7 +333,7 @@
     background-color: rgb(235, 234, 240);
   }
 
-  .calculator .calculator__calculatorTool:active{
+  .calculator .calculator__calculatorTool:hover{
     background-color: rgb(198, 208, 229);
   }
 
