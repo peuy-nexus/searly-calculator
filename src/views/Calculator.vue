@@ -132,8 +132,8 @@
           }
 
             /* 目的：将拼接好的字符串（10 1.2）以number加入栈中
-                 a.输入任意一个数字都会进栈
-                 b.目前使用：在this.isOperator(character)里面，未点击符号键的时候，让number做字符串拼接，点击符号键的时再将前面拼接好的入栈，但符号键会溢出一个
+                 a.目前使用：输入任意一个数字都会进栈
+                 b.在this.isOperator(character)里面，未点击符号键的时候，让number做字符串拼接，点击符号键的时再将前面拼接好的入栈，但符号键会溢出一个
                  c.在!this.isOperator(character)发生的问题，只有输入长度超过1的才能生效
 
                解决a： a与b连用，给a加一个判断（输入数小于10），否则不输入，但无法解决b的问题
@@ -323,11 +323,11 @@
 
       // 溢出部分按钮变色
       changeColor(color){
-        let calculatorTool = document.querySelectorAll('.calculator__calculatorTool')
-        for (let i=0; i<calculatorTool.length; i++){
-          calculatorTool[i].style.background =color;
+        for (let i=0; i<this.$refs.changeColor.length; i++){
+          this.$refs.changeColor[i].style.color = color
         }
       },
+
       // 溢出将各个数值归0
       handle(){
         if( this.preEquation === '溢出'){
@@ -355,7 +355,6 @@
           this.isStarted = true
           this.changeColor('rgb(210, 210, 210)')
         }
-        return
       },
       // 清空
       clear() {
