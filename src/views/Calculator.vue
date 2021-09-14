@@ -4,15 +4,17 @@
     <span class="calculator__calBar" style="grid-area: calculator__minimize"></span>
     <span class="calculator__calBar" style="grid-area: calculator__maximize"></span>
     <span class="calculator__calBar" style="grid-area: calculator__close"></span>
+    <!--  预览  -->
     <div class="calculator__result showFormula" style="grid-area: calculator__result">
       {{ equation }}
     </div>
+    <!--  操作与结果  -->
     <div class="calculator__preview" style="grid-area: calculator__preview">
       {{preEquation}}
     </div>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__prescribing" >√</button>
-<!--@click="prescribing"    @click="square"-->
-    <button class="calculator__calculatorTool" style="grid-area: calculator__square" >x²</button>
+    <!--  运算符  -->
+    <button class="calculator__calculatorTool" style="grid-area: calculator__prescribing" @click="prescribing">√</button>
+    <button class="calculator__calculatorTool" style="grid-area: calculator__square" @click="square">x²</button>
     <button class="calculator__calculatorTool" style="grid-area: calculator__clear" @click="clear">C</button>
     <button class="calculator__calculatorTool" style="grid-area: calculator__delete" @click="del"></button>
     <button class="calculator__calculatorTool" style="grid-area: calculator__left" @click="append('(')">（</button>
@@ -22,10 +24,8 @@
     <button class="calculator__calculatorTool" style="grid-area: calculator__subtract" @click="append('-')">-</button>
     <button class="calculator__calculatorTool" style="grid-area: calculator__multiply" @click="append('×')">×</button>
     <button class="calculator__calculatorTool" style="grid-area: calculator__divide" @click="append('÷')">÷</button>
-<!--  @click="calculate"  -->
     <button class="calculator__calculatorTool" style="grid-area: calculator__equal" @click="calculate">=</button>
-
-<!--    <button v-for="(item,index) in number" :style="item" @click="append(index)" :key="index">{{index}}</button>-->
+    <!--  数值键  -->
     <button style="grid-area: calculator__number-0" @click="append(0)">0</button>
     <button style="grid-area: calculator__number-1" @click="append(1)">1</button>
     <button style="grid-area: calculator__number-2" @click="append(2)">2</button>
@@ -36,7 +36,6 @@
     <button style="grid-area: calculator__number-7" @click="append(7)">7</button>
     <button style="grid-area: calculator__number-8" @click="append(8)">8</button>
     <button style="grid-area: calculator__number-9" @click="append(9)">9</button>
-
 
     <button style="grid-area: calculator__dot" @click="append('.')">.</button>
   </div>
@@ -51,8 +50,6 @@
       return{
         test:true, // 测试
         number: 0, // 计算
-        number2:0, // 输入的数
-        symbol:'', // 符号
         sum: 0, // 和
         equation: '0',  // 计算表达
         preEquation:0, // 预览和答案
@@ -78,13 +75,18 @@
             this.preEquation = '0' + character
             this.equation = '0' + character // 0910
             this.dec = true //不能输入小数点
-          }else{
+          }else if(character === '('){
+            // 判断第一个输入的是（
+            this.equation = '' + character
+            this.arr.push(this.equation)
+          }
+          else{
             // 如果不是，则将0替换为数字
             // 0910
             this.equation = '' + character
             this.number = character - 0 // 0913
-            this.arr.push(this.number) // 0913-2
-            // console.log(this.arr); // 将数字push进数组
+
+            this.arr.push(this.number) // 将数字push进数组
 
             // 0909
             if (!this.isOperator(character)){
@@ -124,11 +126,7 @@
             this.equation += '' + character
             this.number = character;
             this.arr.push(this.number)
-            console.log(this.arr); //0913-2
-
-            // 0913-2  中缀转后缀
-            // this.midToBack(this.arr) // 中缀转后缀
-            // console.log(this.arr);
+            console.log(this.arr); // 将数字加入栈
           }
 
           // 0910 正常输入数字
@@ -145,28 +143,11 @@
         
         // 输入功能键后
         if (this.isOperator(character) && !this.poer) {
-          // 输入符号立刻进行计算
 
-          this.symbol = character // 0913
           this.number = this.preEquation - 0 //0913
-          // this.arr.push(character) // 0913-2
-          // console.log(this.arr); // 0913-2
-
-
-          let right = this.arr.pop()
-          console.log('right'+right);
-          let left = this.arr.pop()
-          console.log('left'+left);
-          
 
           this.equation += '' + character
           this.arr.push(character) //0913-2
-
-        
-          
-          // this.arr.push(this.getCont(left,right,character))
-
-          // this.getCont() // 0913
 
           this.preEquation =  this.sum //0913 赋值操作
 
@@ -177,49 +158,49 @@
           return false
         }
       },
+
       // 中缀转后缀
       midToBack(arr) {
-        let symPrior = { "(": 0, ")": 0, "%": 1, "/": 1, "*": 1, "+": 2, "-": 2 }; //优先级对象数组越小越优先
-        console.log(arr); // 转换为数组
-        let stack = [];
-        let back = [];
+        let symPrior = { "(": 0, ")": 0, "%": 1, "/": 1, "*": 1, "+": 2, "-": 2 }; // 优先级判断
+        console.log(arr); // 输出arr数组
+        let stack = []; // 判断
+        let back = []; // 后缀表达式
         for (let i = 0; i < arr.length; i++) {
-            let cur = arr[i];
-            console.log("输出"+cur); // 输出
-            if (!isNaN(cur)) { //数字
-                back.push(cur); 
+          let cur = arr[i];
+          console.log("输出"+cur); // 输出
+          if (!isNaN(cur)) { // 判断数字
+            back.push(cur);
+          } else {
+            //不是数字
+            if (stack.length == 0) {
+              stack.push(cur);
+            } else if (cur == ")") {
+              while (stack.length != 0 && stack[stack.length - 1] != "(") {
+                back.push(stack.pop());
+              }
+              if (stack.length == 0){ //栈空 说明表达式()个数不匹配表达式错误
+                return "表达式错误";
+              } else {
+                stack.pop(); //弹出(
+              }
+            } else if (cur == "(" || symPrior[cur] < symPrior[stack[stack.length - 1]]) {
+              stack.push(cur);
             } else {
-				//不是数字
-                if (stack.length == 0) {
-                    stack.push(cur);
-                } else if (cur == ")") {
-                    while (stack.length != 0 && stack[stack.length - 1] != "(") {
-                        back.push(stack.pop());
-                    }
-                    if (stack.length == 0) //栈空 说明表达式()个数不匹配表达式错误
-                    {
-                        throw new calc_error("表达式错误");
-                        return;
-                    } else {
-                        stack.pop(); //弹出(
-                    }
-                } else if (cur == "(" || symPrior[cur] < symPrior[stack[stack.length - 1]]) {
-                    stack.push(cur);
-                } else {
-                    while (stack.length != 0 && stack[stack.length - 1] != "(" && symPrior[cur] >= symPrior[stack[stack.length - 1]]) {
-                        back.push(stack.pop());
-                    }
-                    stack.push(cur);
+                while (stack.length != 0 && stack[stack.length - 1] != "(" && symPrior[cur] >= symPrior[stack[stack.length - 1]]) {
+                  back.push(stack.pop());
                 }
+              stack.push(cur);
+              }
             }
             }
             while (stack.length != 0) {
-                back.push(stack.pop());
+              back.push(stack.pop());
             }
-             console.log('中缀转后缀');
-            console.log(back);
+             // console.log('中缀转后缀');
+             // console.log(back);
             return back;
           },
+
       // 删除
       del(){
         this.handle()
@@ -227,60 +208,44 @@
         if (this.flag == false){
           this.equation = this.equation.substring(0,this.equation.length - 1);
           this.preEquation = this.preEquation.substring(0,this.preEquation.length - 1);
-        }else{
-          // this.equation = ''
-          this.equation = this.equation.substring(0,this.equation.length - 1);
+          this.arr.pop()
+        }
+        else{
+          this.equation = ''
+          this.arr.length = 0
           this.flag = false
         }
         if (this.preEquation === ''){
           this.preEquation = '0'
         }
       },
-      // 计算表达式的值
-      getCont(left, right, operator){
-        switch (operator) {
-          case "+":
-            this.sum = left + right
-            break;
-          case "-":
-            this.sum = left - right
-            break;
-          case "×":
-              this.sum = left * right
-            break;
-          case "÷":
-              this.sum = left / right
-              break;
-        }
-      },
-	  
+
+      // 弹出并计算
 	  evalRPN(token){
-		  console.log("最终结果："+token)
-		  let stack = []; 
-		  
+		  // console.log("最终结果："+token)
+		  let stack = [];
 		  for(let i = 0; i < token.length; i++){
 			  if(!isNaN(token[i])){
 				  stack.push(token[i])
 			  }
-			  
 			  else{
 				  let left=stack.pop();
 				  let right=stack.pop()
 				  let res=0; //结果
 				  if(token[i]==='+'){
-					  res=parseFloat(left)+parseFloat(right)
+					  res = parseFloat(left) + parseFloat(right)
 				  }
 				  else if(token[i]==='-'){
-					  res=parseFloat(right)-parseFloat(left)
+					  res = parseFloat(right) - parseFloat(left)
 				  }
-				  else if(token[i]==='*'){
-					  res=parseFloat(right)*parseFloat(left)
+				  else if(token[i]==='×'){
+					  res = parseFloat(right) * parseFloat(left)
 				  }
-				  else if(token[i]==='/'){
-					  resparseFloat(right)/parseFloat(left)
+				  else if(token[i]==='÷'){
+					  res = parseFloat(right) / parseFloat(left)
 				  }
 				  else{
-					  throw new calc_error("字符串错误")
+                    return "字符串错误"
 				  }
 				  stack.push(res)
 			  }
@@ -290,18 +255,18 @@
 
       // =
       calculate() {
-        // this.getCont() // 0913
         let s=this.midToBack(this.arr) // 中缀转后缀
-		let arr=['1','2','3','1','+','*','+']
-		let end=this.evalRPN(arr)
-		console.log("最后计算结果:"+end)
-        this.preEquation =  this.sum //0913 赋值操作
-        console.log('calculate= '+this.preEquation);
-
+        console.log('中缀转后缀: ');
+        console.log(s);
+		// let arr=['1','2','3','1','+','*','+']
+		let end=this.evalRPN(s)
+        this.preEquation = end//0913 赋值操作
+        console.log("最后计算结果:"+ this.preEquation )
         this.dec = false
         this.poer = false
         this.flag = true
       },
+
       // +/-
       calculateToggle() {
         if (this.poer) {
@@ -310,18 +275,26 @@
         }
         this.handle()
         this.changeColor('rgb(235, 234, 240)')
-        this.equation = this.equation + '* -1'
+        this.equation = this.equation + '×' + '-1'
+        this.arr.push('×')
+        this.arr.push(-1)
+        console.log(this.arr);
       },
+
       // 开根 直接得出结果
-      // prescribing(){
-      //   // let result = this.preEquation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
-      //   //   .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
-      //   // this.preEquation = parseFloat(this.noEval(result).toFixed(12)).toString()
-      //   // this.dec = false
-      //   // this.poer = false
-      //   // this.preEquation = parseFloat(Math.sqrt(this.preEquation).toFixed(15)).toString()
-      //   // this.equation = '√' + this.preEquation
-      // },
+      prescribing(){
+        this.equation.replace(new RegExp('√', 'g'), '')
+        this.calculate()
+        console.log('开根');
+        this.equation = '√' + this.preEquation
+        this.preEquation = Math.sqrt(this.preEquation)
+        this.arr.pop()
+        this.arr.push(this.preEquation)
+        this.dec = false
+        this.poer = false
+        return
+      },
+
       // 溢出部分按钮变色
       changeColor(color){
         let calculatorTool = document.querySelectorAll('.calculator__calculatorTool')
@@ -329,39 +302,47 @@
           calculatorTool[i].style.background =color;
         }
       },
+      // 溢出将各个数值归0
       handle(){
         if( this.preEquation === '溢出'){
           this.equation = ''
-          this.preEquation = '0'
+          this.preEquation = 0
+          this.arr.length = 0
         }
       },
-      // 平方 直接得出结果
-      // square(){
-      //   // let result = this.preEquation.replace(new RegExp('×', 'g'), '*').replace(new RegExp('÷', 'g'), '/')
-      //   //   .replace(new RegExp('（','g'),'(').replace(new RegExp('）','g'),')')
-      //   // this.preEquation = parseFloat(this.noEval(result).toFixed(15)).toString()
-      //   // this.dec = false
-      //   // this.poer = false
-      //   // if (parseInt(this.preEquation) < this.maxNumber){
-      //   //   this.preEquation = parseFloat(Math.pow(this.preEquation,2).toFixed(15)).toString()
-      //   //   this.equation = 'sqr ' + this.preEquation
-      //   // }else{
-      //   //   this.preEquation = '溢出'
-      //   //   this.dec = true
-      //   //   this.isStarted = true
-      //   //   this.changeColor('rgb(210, 210, 210)')
-      //   // }
-      //   // return
-      // },
+      // 平方
+      square(){
+        if (parseInt(this.preEquation) < 999999999999){
+        this.equation.replace(new RegExp('sqr', 'g'), '')
+        this.calculate()
+        console.log('平方')
+        this.equation = 'sqr' + this.preEquation
+        this.preEquation = this.preEquation * this.preEquation
+        this.arr.pop()
+        this.arr.push(this.preEquation)
+
+        this.dec = false
+        this.poer = false
+        }else{
+          this.preEquation = '溢出'
+          this.dec = true
+          this.isStarted = true
+          this.changeColor('rgb(210, 210, 210)')
+        }
+        return
+      },
       // 清空
       clear() {
         if (this.flag){
           this.equation = ''
-          this.preEquation = ''
+          this.preEquation = 0
+          this.arr.length = 0
           this.sum = 0
           this.flag = false
         }else{
           this.preEquation = ''
+          this.equation = this.equation.substring(0,this.equation.length - 1);
+          this.arr.pop()
           this.sum = 0
           this.flag = true
         }
