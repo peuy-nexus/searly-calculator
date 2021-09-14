@@ -48,12 +48,11 @@
     name: 'Calculator',
     data(){
       return{
-        test:true, // 测试
+        // test:true, // 测试
         number: 0, // 计算
-        sum: 0, // 和
         equation: '0',  // 计算表达
         preEquation:0, // 预览和答案
-        arr:[],
+        arr:[], // 模拟栈
         dec: false, // 判断是否出现了两位小数点
         poer: false, // 判断是否出现两次功能键
         flag:false, // 标识 判断数字是否清空
@@ -78,7 +77,7 @@
           }else if(character === '('){
             // 判断第一个输入的是（
             this.equation = '' + character
-            this.arr.push(this.equation)
+            this.arr.push(this.equation) // 0914注a
           }
           else{
             // 如果不是，则将0替换为数字
@@ -86,8 +85,8 @@
             this.equation = '' + character
             this.number = character - 0 // 0913
 
-            this.arr.push(this.number) // 将数字push进数组
-
+            this.arr.push(this.number) // 将数字push进数组 0914注a
+            console.log(this.arr);
             // 0909
             if (!this.isOperator(character)){
               this.preEquation = '' + character
@@ -123,34 +122,51 @@
             this.equation += '' + character
             this.flag = false
           }else{
+            // a
+            // 0913-2
             this.equation += '' + character
             this.number = character;
-            this.arr.push(this.number)
-            console.log(this.arr); // 将数字加入栈
+            console.log(this.number);
+            this.arr.push(this.number) //0914注a
+            console.log(this.arr); // 将数字加入栈 0914注a
           }
 
+            /* 目的：将拼接好的字符串（10 1.2）以number加入栈中
+                 a.输入任意一个数字都会进栈
+                 b.目前使用：在this.isOperator(character)里面，未点击符号键的时候，让number做字符串拼接，点击符号键的时再将前面拼接好的入栈，但符号键会溢出一个
+                 c.在!this.isOperator(character)发生的问题，只有输入长度超过1的才能生效
+
+               解决a： a与b连用，给a加一个判断（输入数小于10），否则不输入，但无法解决b的问题
+               解决b： 在arr转后缀表达式时，加一个判断，如果最后一个是非数字则删除，但每次确认时最终还是要输入符号键，不符合计算器使用规范
+               解决b2： 修改确认键（目前确认键为+-×÷） ？？？
+               解决c： a加判断与c连用，但例如输入1+2+99会解析为[1,2,'+',9,9,99,'+']
+               */
+
+
+
+          // b
           // 0910 正常输入数字
           if (!this.isOperator(character) && this.flag){
-            // 提前进行计算并得到计算所得值
             this.preEquation = ''
             this.preEquation += '' + character
             this.flag = false
           }else{
-            this.preEquation += '' + character
-            
+            this.preEquation += '' + character // 拼接字符串
           }
         }
         
         // 输入功能键后
         if (this.isOperator(character) && !this.poer) {
-
           this.number = this.preEquation - 0 //0913
+
+          //c
+          // this.arr.push(this.number) // 0914
+          // console.log(this.arr); // 0914
 
           this.equation += '' + character
           this.arr.push(character) //0913-2
-
-          this.preEquation =  this.sum //0913 赋值操作
-
+          console.log(this.arr); // 插入功能键
+          this.preEquation =  this.number //0913 赋值操作
           this.dec = false // 允许再次输入小数点
           this.poer = true // 不能输入功能键
           this.flag = true
@@ -161,10 +177,14 @@
 
       // 中缀转后缀
       midToBack(arr) {
-        let symPrior = { "(": 0, ")": 0, "%": 1, "/": 1, "*": 1, "+": 2, "-": 2 }; // 优先级判断
+        let symPrior = {"(": 0, ")": 0, "÷": 1, "×": 1, "+": 2, "-": 2 }; // 优先级判断
         console.log(arr); // 输出arr数组
         let stack = []; // 判断
         let back = []; // 后缀表达式
+
+        // this.arr.pop() // 0914注c
+        // this.equation = this.equation.substring(0,this.equation.length - 1); // 0914注c方案
+
         for (let i = 0; i < arr.length; i++) {
           let cur = arr[i];
           console.log("输出"+cur); // 输出
@@ -178,7 +198,7 @@
               while (stack.length != 0 && stack[stack.length - 1] != "(") {
                 back.push(stack.pop());
               }
-              if (stack.length == 0){ //栈空 说明表达式()个数不匹配表达式错误
+              if (stack.length == 0){ //栈空 表达式()个数不匹配
                 return "表达式错误";
               } else {
                 stack.pop(); //弹出(
@@ -220,29 +240,34 @@
         }
       },
 
-      // 弹出并计算
+      // 0913-2
+      // 弹出数字并计算
 	  evalRPN(token){
 		  // console.log("最终结果："+token)
 		  let stack = [];
 		  for(let i = 0; i < token.length; i++){
 			  if(!isNaN(token[i])){
-				  stack.push(token[i])
+				  stack.push(token[i]) // 数字
 			  }
 			  else{
 				  let left=stack.pop();
 				  let right=stack.pop()
 				  let res=0; //结果
-				  if(token[i]==='+'){
+				  if(token[i] === '+'){
 					  res = parseFloat(left) + parseFloat(right)
 				  }
-				  else if(token[i]==='-'){
+				  else if(token[i] === '-'){
 					  res = parseFloat(right) - parseFloat(left)
 				  }
-				  else if(token[i]==='×'){
+				  else if(token[i] === '×'){
 					  res = parseFloat(right) * parseFloat(left)
 				  }
-				  else if(token[i]==='÷'){
-					  res = parseFloat(right) / parseFloat(left)
+				  else if(token[i] === '÷'){
+				    if (parseFloat(left) === 0){
+				      return '除数不能为0'
+                    }else{
+                      res = parseFloat(right) / parseFloat(left)
+                    }
 				  }
 				  else{
                     return "字符串错误"
@@ -255,11 +280,12 @@
 
       // =
       calculate() {
-        let s=this.midToBack(this.arr) // 中缀转后缀
+        let s = this.midToBack(this.arr) // 中缀转后缀
         console.log('中缀转后缀: ');
         console.log(s);
-		// let arr=['1','2','3','1','+','*','+']
-		let end=this.evalRPN(s)
+		// let arr2=['11.2','2','3','1','+','×','+']
+        // console.log(arr2);
+		let end = this.evalRPN(s)
         this.preEquation = end//0913 赋值操作
         console.log("最后计算结果:"+ this.preEquation )
         this.dec = false
@@ -288,7 +314,7 @@
         console.log('开根');
         this.equation = '√' + this.preEquation
         this.preEquation = Math.sqrt(this.preEquation)
-        this.arr.pop()
+        this.arr.length = 0
         this.arr.push(this.preEquation)
         this.dec = false
         this.poer = false
@@ -318,7 +344,7 @@
         console.log('平方')
         this.equation = 'sqr' + this.preEquation
         this.preEquation = this.preEquation * this.preEquation
-        this.arr.pop()
+        this.arr.length = 0
         this.arr.push(this.preEquation)
 
         this.dec = false
@@ -337,13 +363,11 @@
           this.equation = ''
           this.preEquation = 0
           this.arr.length = 0
-          this.sum = 0
           this.flag = false
         }else{
           this.preEquation = ''
           this.equation = this.equation.substring(0,this.equation.length - 1);
           this.arr.pop()
-          this.sum = 0
           this.flag = true
         }
         this.dec = false
