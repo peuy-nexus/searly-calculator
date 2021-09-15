@@ -13,18 +13,18 @@
       {{preEquation}}
     </div>
     <!--  运算符  -->
-    <button class="calculator__calculatorTool" style="grid-area: calculator__prescribing" @click="prescribing">√</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__square" @click="square">x²</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__clear" @click="clear">C</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__delete" @click="del"></button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__left" @click="append('(')">（</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__right" @click="append(')')">）</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__plus-minus" @click="calculateToggle">±</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__add" @click="append('+')">+</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__subtract" @click="append('-')">-</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__multiply" @click="append('×')">×</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__divide" @click="append('÷')">÷</button>
-    <button class="calculator__calculatorTool" style="grid-area: calculator__equal" @click="calculate">=</button>
+    <button :style="color" style="grid-area: calculator__prescribing" @click="prescribing">√</button>
+    <button :style="color" style="grid-area: calculator__square" @click="square">x²</button>
+    <button :style="color" style="grid-area: calculator__clear" @click="clear">C</button>
+    <button :style="color" style="grid-area: calculator__delete" @click="del"></button>
+    <button :style="color" style="grid-area: calculator__left" @click="append('(')">（</button>
+    <button :style="color" style="grid-area: calculator__right" @click="append(')')">）</button>
+    <button :style="color" style="grid-area: calculator__plus-minus" @click="calculateToggle">±</button>
+    <button :style="color" style="grid-area: calculator__add" @click="append('+')">+</button>
+    <button :style="color" style="grid-area: calculator__subtract" @click="append('-')">-</button>
+    <button :style="color" style="grid-area: calculator__multiply" @click="append('×')">×</button>
+    <button :style="color" style="grid-area: calculator__divide" @click="append('÷')">÷</button>
+    <button :style="color" style="grid-area: calculator__equal" @click="calculate">=</button>
     <!--  数值键  -->
     <button style="grid-area: calculator__number-0" @click="append(0)">0</button>
     <button style="grid-area: calculator__number-1" @click="append(1)">1</button>
@@ -57,6 +57,7 @@
         poer: false, // 判断是否出现两次功能键
         flag:false, // 标识 判断数字是否清空
         isStarted: false, // 是否已经开始输入数字
+        color: {background : 'rgb(235, 234, 240)'}
       }
     },
     methods: {
@@ -77,7 +78,7 @@
           }else if(character === '('){
             // 判断第一个输入的是（
             this.equation = '' + character
-            this.arr.push(this.equation) // 0914注a
+            // this.arr.push(this.equation) // 0914注a
           }
           else{
             // 如果不是，则将0替换为数字
@@ -85,7 +86,7 @@
             this.equation = '' + character
             this.number = character - 0 // 0913
 
-            this.arr.push(this.number) // 将数字push进数组 0914注a
+            // this.arr.push(this.number) // 将数字push进数组 0914注a
             console.log(this.arr);
             // 0909
             if (!this.isOperator(character)){
@@ -98,10 +99,10 @@
 
         // 输入数字
         // 溢出重置
-        this.changeColor('rgb(235, 234, 240)')
+        this.color = {background:'rgb(235, 234, 240)'}
         if( this.preEquation === '溢出'){
           this.handle()
-          this.changeColor('rgb(235, 234, 240)')
+          this.color = {background:'rgb(235, 234, 240)'}
         }
         // 防止输入两次小数
         if (!this.isOperator(character)) {
@@ -127,24 +128,29 @@
             this.equation += '' + character
             this.number = character;
             console.log(this.number);
-            this.arr.push(this.number) //0914注a
-            console.log(this.arr); // 将数字加入栈 0914注a
+            // this.arr.push(this.number) //0914注a
+            // console.log(this.arr); // 将数字加入栈 0914注a
           }
 
             /* 目的：将拼接好的字符串（10 1.2）以number加入栈中
-                 a.目前使用：输入任意一个数字都会进栈
-                 b.在this.isOperator(character)里面，未点击符号键的时候，让number做字符串拼接，点击符号键的时再将前面拼接好的入栈，但符号键会溢出一个
+                 a.输入任意一个数字都会进栈
+                 b.目前使用：在this.isOperator(character)里面，未点击符号键的时候，让number做字符串拼接，点击符号键的时再将前面拼接好的入栈，但符号键会溢出一个
                  c.在!this.isOperator(character)发生的问题，只有输入长度超过1的才能生效
 
                解决a： a与b连用，给a加一个判断（输入数小于10），否则不输入，但无法解决b的问题
                解决b： 在arr转后缀表达式时，加一个判断，如果最后一个是非数字则删除，但每次确认时最终还是要输入符号键，不符合计算器使用规范
-               解决b2： 修改确认键（目前确认键为+-×÷） ？？？
+               解决b2：将等于号也变为修改确认键（目前确认键为+-×÷），将最后一位数也添加进去，
+                       但因为平方与开方都会调用calculate，即添加最后一位，导致在运算好的字符进去后，原本输入的数字也会进去
+               解决b3：输入9，转为[9]，平方81，并清空arr，再将81添加进arr，arr = [81],在平方执行calculate ,calculate里面执行push（number）number为9,arr = [81,9],执行9的平方
+                       解决方案，每次平方不是将最后一位数平方，而是arr[0]
+                       但因为平方的是第一个数，输入1+2+3再平方，会演变为sqr6 == 1，即1（首位数）的平方
+               解决b4.1：在平方前，点击等于(calculate)直接计算出前后缀表达式结果，最后清空，将结果再入栈，但因为是calculate中直接计算，+/-会变成将最终结果取负
+               解决b4.2：如果不在calculate里面操作+/-则不会有影响,即在平方里面this.calculate()后进行保留结果，清空arr，结果入栈，但可能会导致b2的问题进入死循环
+               解决b4.3：
                解决c： a加判断与c连用，但例如输入1+2+99会解析为[1,2,'+',9,9,99,'+']
                */
 
-
-
-          // b
+          // c
           // 0910 正常输入数字
           if (!this.isOperator(character) && this.flag){
             this.preEquation = ''
@@ -159,9 +165,9 @@
         if (this.isOperator(character) && !this.poer) {
           this.number = this.preEquation - 0 //0913
 
-          //c
-          // this.arr.push(this.number) // 0914
-          // console.log(this.arr); // 0914
+          // 0914注b
+          this.arr.push(this.number) // 0914
+          console.log(this.arr); // 0914
 
           this.equation += '' + character
           this.arr.push(character) //0913-2
@@ -182,8 +188,8 @@
         let stack = []; // 判断
         let back = []; // 后缀表达式
 
-        // this.arr.pop() // 0914注c
-        // this.equation = this.equation.substring(0,this.equation.length - 1); // 0914注c方案
+        // this.arr.pop() // 0914注b方案1
+        // this.equation = this.equation.substring(0,this.equation.length - 1); // 0914注b方案1
 
         for (let i = 0; i < arr.length; i++) {
           let cur = arr[i];
@@ -224,7 +230,7 @@
       // 删除
       del(){
         this.handle()
-        this.changeColor('rgb(235, 234, 240)')
+        this.color = {background:'rgb(235, 234, 240)'}
         if (this.flag == false){
           this.equation = this.equation.substring(0,this.equation.length - 1);
           this.preEquation = this.preEquation.substring(0,this.preEquation.length - 1);
@@ -280,6 +286,11 @@
 
       // =
       calculate() {
+
+        // 0914注b方案2
+        this.arr.push(this.number) // 0914
+        console.log(this.arr); // 0914
+
         let s = this.midToBack(this.arr) // 中缀转后缀
         console.log('中缀转后缀: ');
         console.log(s);
@@ -287,6 +298,11 @@
         // console.log(arr2);
 		let end = this.evalRPN(s)
         this.preEquation = end//0913 赋值操作
+        // 0915注4.1
+        this.arr.length = 0
+        this.arr.push(this.preEquation)
+        console.log(this.arr);
+
         console.log("最后计算结果:"+ this.preEquation )
         this.dec = false
         this.poer = false
@@ -300,7 +316,7 @@
           return
         }
         this.handle()
-        this.changeColor('rgb(235, 234, 240)')
+        this.color = {background:'rgb(235, 234, 240)'}
         this.equation = this.equation + '×' + '-1'
         this.arr.push('×')
         this.arr.push(-1)
@@ -310,10 +326,11 @@
       // 开根 直接得出结果
       prescribing(){
         this.equation.replace(new RegExp('√', 'g'), '')
-        this.calculate()
-        console.log('开根');
+        this.calculate()// 0915注b方案2
         this.equation = '√' + this.preEquation
-        this.preEquation = Math.sqrt(this.preEquation)
+        // this.preEquation = Math.sqrt(this.preEquation)
+        this.preEquation = Math.sqrt(this.arr[0]) // 0914注b方案3
+        console.log('开根 ' + this.preEquation);
         this.arr.length = 0
         this.arr.push(this.preEquation)
         this.dec = false
@@ -322,10 +339,8 @@
       },
 
       // 溢出部分按钮变色
-      changeColor(color){
-        for (let i=0; i<this.$refs.changeColor.length; i++){
-          this.$refs.changeColor[i].style.color = color
-        }
+      changeColor(){
+        this.color = {background:'rgb(210, 210, 210)'}
       },
 
       // 溢出将各个数值归0
@@ -340,20 +355,20 @@
       square(){
         if (parseInt(this.preEquation) < 999999999999){
         this.equation.replace(new RegExp('sqr', 'g'), '')
-        this.calculate()
-        console.log('平方')
+        this.calculate()// 0915注b方案2
         this.equation = 'sqr' + this.preEquation
-        this.preEquation = this.preEquation * this.preEquation
+        // this.preEquation = this.preEquation * this.preEquation // 0915
+        this.preEquation = this.arr[0] * this.arr[0] // 0915注b方案3
+        console.log(this.arr[0] + '的平方')
         this.arr.length = 0
         this.arr.push(this.preEquation)
-
         this.dec = false
         this.poer = false
         }else{
           this.preEquation = '溢出'
           this.dec = true
           this.isStarted = true
-          this.changeColor('rgb(210, 210, 210)')
+          this.changeColor()
         }
       },
       // 清空
@@ -372,9 +387,10 @@
         this.dec = false
         this.poer = false
         this.isStarted = false
-        this.changeColor('rgb(235, 234, 240)')
+        this.color = {background:'rgb(235, 234, 240)'}
       }
-    }
+    },
+
 
   };
 </script>
@@ -456,14 +472,6 @@
 
   .calculator button:hover {
     background-color: rgb(220, 233, 243);
-  }
-
-  .calculator .calculator__calculatorTool{
-    background-color: rgb(235, 234, 240);
-  }
-
-  .calculator .calculator__calculatorTool:hover{
-    background-color: rgb(198, 208, 229);
   }
 
   .calculator__result,
